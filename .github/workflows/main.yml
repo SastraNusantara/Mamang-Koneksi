@@ -1,116 +1,86 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mamang Koneksi Billing - MK System v23</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <style>
-        .app-bg { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
-        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4); }
-        .mk-simple-logo {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border-radius: 0.75rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: 900;
-            font-size: 1.25rem;
-            letter-spacing: 0.05em;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-    </style>
-</head>
-<body class="app-bg text-slate-100 min-h-screen flex flex-col font-sans pb-20">
-    <!-- LOGIN SCREEN -->
-    <div id="login-screen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 card-shadow space-y-6 text-center">
-            <div class="w-16 h-16 mx-auto mk-simple-logo text-xl" id="logo-display-login">MK</div>
-            <div>
-                <h1 class="text-lg font-bold text-white tracking-wide">MAMANG KONEKSI</h1>
-                <p class="text-xs text-indigo-400 mt-0.5">Sastra Nusantara • ISP Billing System</p>
-            </div>
-            <form onsubmit="handleLogin(event)" class="space-y-4 text-xs text-left">
-                <div>
-                    <label class="block text-slate-300 font-medium mb-1">Pilih Akun Username</label>
-                    <select id="login-user" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-100">
-                        <option value="admin">admin (ADMIN)</option>
-                        <option value="staff">staff (STAFF)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-slate-300 font-medium mb-1">Password</label>
-                    <input type="password" id="login-pass" required placeholder="Ketik password..." class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-100">
-                </div>
-                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition text-sm">MASUK APLIKASI</button>
-            </form>
-            <div class="text-[10px] text-slate-500">Created by Mamang Koneksi @Tawab Hidayat</div>
-        </div>
-    </div>
+name: Build Mamang Koneksi APK
 
-    <!-- MAIN APP WRAPPER -->
-    <div id="main-app" class="hidden flex-1 flex flex-col">
-        <header class="bg-slate-900/90 border-b border-slate-700/80 p-4 sticky top-0 z-40">
-            <div class="max-w-7xl mx-auto flex justify-between items-center">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 mk-simple-logo text-sm" id="logo-display-header">MK</div>
-                    <div>
-                        <h1 class="text-sm font-bold text-white">MAMANG KONEKSI</h1>
-                        <p class="text-[10px] text-indigo-400">MK System v23</p>
-                    </div>
-                </div>
-                <button onclick="executeLogout()" class="px-3 py-1 bg-slate-800 hover:bg-rose-900/40 text-rose-400 rounded-lg text-xs">Logout</button>
-            </div>
-        </header>
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
 
-        <main class="max-w-7xl mx-auto w-full p-4 space-y-6 flex-1">
-            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl space-y-4">
-                <h2 class="text-base font-bold text-white"><i class="fa-solid fa-server text-sky-400 mr-2"></i> Menu Master & Upload Logo</h2>
-                <p class="text-xs text-slate-300">Gunakan fitur di bawah ini untuk mengunggah logo kustom atau menggunakan logo MK simple.</p>
-                
-                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex items-center gap-4">
-                    <div id="master-logo-preview-box" class="w-16 h-16 mk-simple-logo text-xl">MK</div>
-                    <div class="space-y-2 text-xs">
-                        <p class="font-bold text-emerald-400">Status: Logo MK Simple Aktif</p>
-                        <label class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow cursor-pointer inline-flex items-center gap-2">
-                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Logo Baru
-                            <input type="file" id="custom-logo-file" accept="image/*" onchange="handleCustomLogoUpload(event)" class="hidden">
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </div>
+permissions:
+  contents: read
 
-    <script>
-        function handleLogin(e) {
-            e.preventDefault();
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-app').classList.remove('hidden');
-        }
-        function executeLogout() {
-            document.getElementById('main-app').classList.add('hidden');
-            document.getElementById('login-screen').classList.remove('hidden');
-        }
-        function handleCustomLogoUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const imgDataUrl = event.target.result;
-                const newLogoHTML = `<img src="${imgDataUrl}" alt="Logo" class="w-full h-full object-contain rounded-xl">`;
-                document.getElementById('master-logo-preview-box').innerHTML = newLogoHTML;
-                document.getElementById('logo-display-header').innerHTML = newLogoHTML;
-                document.getElementById('logo-display-login').innerHTML = newLogoHTML;
-                alert(`Logo kustom "${file.name}" berhasil diunggah dan diterapkan!`);
-            };
-            reader.readAsDataURL(file);
-        }
-    </script>
-</body>
-</html>
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Find Android project
+        id: project
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f "settings.gradle" && -f "app/build.gradle" ]]; then
+            project_dir="."
+          else
+            settings_file="$(find . -type f -name settings.gradle -not -path './.git/*' -print -quit)"
+            if [[ -z "$settings_file" ]]; then
+              echo "ERROR: settings.gradle tidak ditemukan. Pastikan folder project Android diunggah ke repository."
+              exit 1
+            fi
+            project_dir="$(dirname "$settings_file")"
+          fi
+          echo "dir=$project_dir" >> "$GITHUB_OUTPUT"
+          echo "Android project: $project_dir"
+
+      - name: Build debug APK
+        working-directory: ${{ steps.project.outputs.dir }}
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle --no-daemon assembleDebug --stacktrace 2>&1 | tee build.log
+
+      - name: Show build error summary
+        if: failure()
+        working-directory: ${{ steps.project.outputs.dir }}
+        shell: bash
+        run: |
+          {
+            echo '## Build gagal - ringkasan error'
+            echo '```text'
+            if [[ -f build.log ]]; then
+              grep -n -E 'What went wrong|Execution failed|FAILURE:|Could not|error:|^e: |AAPT|Unresolved reference' -A4 build.log | head -n 80 || tail -n 80 build.log
+            else
+              echo 'Log build belum tersedia.'
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mamang-Koneksi-APK
+          path: ${{ steps.project.outputs.dir }}/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
