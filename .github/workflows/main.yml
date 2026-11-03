@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mamang Koneksi Billing - MK System v23</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .app-bg { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4); }
+        .mk-simple-logo {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 1.25rem;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body class="app-bg text-slate-100 min-h-screen flex flex-col font-sans pb-20">
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 bg-slate-950 z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-sm w-full p-6 card-shadow space-y-6 text-center">
+            <div class="w-16 h-16 mx-auto mk-simple-logo text-xl" id="logo-display-login">MK</div>
+            <div>
+                <h1 class="text-lg font-bold text-white tracking-wide">MAMANG KONEKSI</h1>
+                <p class="text-xs text-indigo-400 mt-0.5">Sastra Nusantara • ISP Billing System</p>
+            </div>
+            <form onsubmit="handleLogin(event)" class="space-y-4 text-xs text-left">
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Pilih Akun Username</label>
+                    <select id="login-user" required class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-100">
+                        <option value="admin">admin (ADMIN)</option>
+                        <option value="staff">staff (STAFF)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1">Password</label>
+                    <input type="password" id="login-pass" required placeholder="Ketik password..." class="w-full p-3 bg-slate-950 border border-slate-700 rounded-xl text-slate-100">
+                </div>
+                <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition text-sm">MASUK APLIKASI</button>
+            </form>
+            <div class="text-[10px] text-slate-500">Created by Mamang Koneksi @Tawab Hidayat</div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="main-app" class="hidden flex-1 flex flex-col">
+        <header class="bg-slate-900/90 border-b border-slate-700/80 p-4 sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 mk-simple-logo text-sm" id="logo-display-header">MK</div>
+                    <div>
+                        <h1 class="text-sm font-bold text-white">MAMANG KONEKSI</h1>
+                        <p class="text-[10px] text-indigo-400">MK System v23</p>
+                    </div>
+                </div>
+                <button onclick="executeLogout()" class="px-3 py-1 bg-slate-800 hover:bg-rose-900/40 text-rose-400 rounded-lg text-xs">Logout</button>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto w-full p-4 space-y-6 flex-1">
+            <div class="bg-slate-800 border border-slate-700 p-6 rounded-xl space-y-4">
+                <h2 class="text-base font-bold text-white"><i class="fa-solid fa-server text-sky-400 mr-2"></i> Menu Master & Upload Logo</h2>
+                <p class="text-xs text-slate-300">Gunakan fitur di bawah ini untuk mengunggah logo kustom atau menggunakan logo MK simple.</p>
+                
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 flex items-center gap-4">
+                    <div id="master-logo-preview-box" class="w-16 h-16 mk-simple-logo text-xl">MK</div>
+                    <div class="space-y-2 text-xs">
+                        <p class="font-bold text-emerald-400">Status: Logo MK Simple Aktif</p>
+                        <label class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shadow cursor-pointer inline-flex items-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Logo Baru
+                            <input type="file" id="custom-logo-file" accept="image/*" onchange="handleCustomLogoUpload(event)" class="hidden">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function handleLogin(e) {
+            e.preventDefault();
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+        }
+        function executeLogout() {
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+        }
+        function handleCustomLogoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const imgDataUrl = event.target.result;
+                const newLogoHTML = `<img src="${imgDataUrl}" alt="Logo" class="w-full h-full object-contain rounded-xl">`;
+                document.getElementById('master-logo-preview-box').innerHTML = newLogoHTML;
+                document.getElementById('logo-display-header').innerHTML = newLogoHTML;
+                document.getElementById('logo-display-login').innerHTML = newLogoHTML;
+                alert(`Logo kustom "${file.name}" berhasil diunggah dan diterapkan!`);
+            };
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
