@@ -38,23 +38,42 @@ jobs:
         with:
           gradle-version: '8.9'
 
+      - name: Extract project ZIP files if needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          extract_dir="$RUNNER_TEMP/mk-project-extracted"
+          mkdir -p "$extract_dir"
+          while IFS= read -r -d '' archive; do
+            echo "Extracting: $archive"
+            unzip -oq "$archive" -d "$extract_dir"
+          done < <(find . -type f -name '*.zip' -not -path './.git/*' -print0)
+          echo "ZIP extraction complete."
+
       - name: Find Android project
         id: project
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -f "settings.gradle" && -f "app/build.gradle" ]]; then
-            project_dir="."
-          else
-            settings_file="$(find . -type f -name settings.gradle -not -path './.git/*' -print -quit)"
-            if [[ -z "$settings_file" ]]; then
-              echo "ERROR: settings.gradle tidak ditemukan. Pastikan folder project Android diunggah ke repository."
-              exit 1
-            fi
-            project_dir="$(dirname "$settings_file")"
+          project_dir=""
+          for search_root in "$GITHUB_WORKSPACE" "$RUNNER_TEMP/mk-project-extracted"; do
+            [[ -d "$search_root" ]] || continue
+            while IFS= read -r -d '' settings_file; do
+              candidate="$(dirname "$settings_file")"
+              if [[ -f "$candidate/app/build.gradle" || -f "$candidate/app/build.gradle.kts" ]]; then
+                project_dir="$candidate"
+                break 2
+              fi
+            done < <(find "$search_root" -type f -name settings.gradle -not -path '*/.git/*' -not -path '*/.gradle/*' -print0)
+          done
+          if [[ -z "$project_dir" ]]; then
+            echo "ERROR: Folder project Android tidak ditemukan. Upload folder hasil ekstrak ZIP atau simpan ZIP proyek di repository."
+            echo "File yang tersedia di repository:"
+            find "$GITHUB_WORKSPACE" -maxdepth 3 -type f | head -n 80
+            exit 1
           fi
           echo "dir=$project_dir" >> "$GITHUB_OUTPUT"
-          echo "Android project: $project_dir"
+          echo "Android project ditemukan: $project_dir"
 
       - name: Build debug APK
         working-directory: ${{ steps.project.outputs.dir }}
@@ -64,7 +83,7 @@ jobs:
           gradle --no-daemon assembleDebug --stacktrace 2>&1 | tee build.log
 
       - name: Show build error summary
-        if: failure()
+        if: failure() && steps.project.outputs.dir != ''
         working-directory: ${{ steps.project.outputs.dir }}
         shell: bash
         run: |
